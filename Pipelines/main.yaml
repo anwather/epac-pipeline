@@ -1,0 +1,48 @@
+trigger: none
+
+variables:
+  PAC_OUTPUT_FOLDER: ./Output
+  environment: contoso
+  serviceConnection: contoso-cloudengineering-azurepipeline
+
+pool:
+  name: cloud-pub
+
+stages:
+  - stage: Plan
+    jobs:
+      - deployment:
+        environment: PolicyPlan
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/build.yaml
+                  parameters:
+                    serviceConnection: $(serviceConnection)
+                    environment: $(environment)
+  - stage: Deploy
+    jobs:
+      - deployment: Deploy
+        environment: Contoso-AzurePolicy
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/deploy.yaml
+                  parameters:
+                    serviceConnection: $(serviceConnection)
+                    environment: $(environment)
+  - stage: RBAC
+    # condition: and(succeeded(), eq( dependencies.Deploy.Deploy.variables.deployRoleChanges, 'yes'))
+    jobs:
+      - deployment:
+        environment: Contoso-AzurePolicy
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/rbac.yaml
+                  parameters:
+                    serviceConnection: $(serviceConnection)
+                    environment: $(environment)

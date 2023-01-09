@@ -1,0 +1,25 @@
+parameters:
+  - name: serviceConnection
+    type: string 
+
+steps:
+  - checkout: self
+  - pwsh: |
+      Install-Module Az.Accounts -Force -AllowClobber -Verbose
+      Install-Module Az.Resources -Force -AllowClobber -Verbose
+      Install-Module Az.PolicyInsights -Force -Verbose
+  - task: AzurePowerShell@5
+    name: TriggerComplianceScan
+    displayName: Trigger Compliance Scan
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      ScriptType: InlineScript
+      azurePowerShellVersion: LatestVersion
+      pwsh: true
+      Inline: |
+        $subscription = Get-AzSubscription
+        $subscription | Foreach-Object {
+          Select-AzSubscription $_
+          Start-AzPolicyComplianceScan -AsJob
+        }
+  

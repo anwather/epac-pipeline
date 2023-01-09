@@ -1,0 +1,18 @@
+trigger: none
+
+pool:
+  name: cloud-pub
+
+stages:
+  - stage: Contoso
+    jobs:
+      - deployment:
+        environment: PolicyPlan
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/remediationsteps.yaml
+                  parameters:
+                    serviceConnection: contoso-cloudengineering-azurepipeline
+                    environment: contoso

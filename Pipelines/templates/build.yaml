@@ -1,0 +1,23 @@
+parameters:
+  - name: serviceConnection
+    type: string 
+  - name: environment
+    type: string 
+  - name: definitionsRootFolder
+    type: string
+    default: Definitions
+
+steps:
+  - checkout: self
+  - task: AzureCLI@2
+    name: Plan
+    displayName: Run Build
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./Scripts/Deploy/Build-AzPoliciesInitiativesAssignmentsPlan.ps1 -PacEnvironmentSelector ${{ parameters.environment }} -DefinitionsRootFolder ${{ parameters.definitionsRootFolder }}
+  - publish: "$(PAC_OUTPUT_FOLDER)"
+    artifact: "policy-plan-${{ parameters.environment }}"
+    condition: succeeded()

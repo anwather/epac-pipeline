@@ -1,0 +1,22 @@
+parameters:
+  - name: serviceConnection
+    type: string 
+  - name: environment
+    type: string 
+  - name: definitionsRootFolder
+    type: string
+    default: Definitions
+
+steps:
+  - checkout: self
+  - download: current
+    artifact: "roles-plan-${{ parameters.environment }}"
+  - task: AzureCLI@2
+    name: RBAC
+    displayName: Deploy Roles
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./Scripts/Deploy/Set-AzPolicyRolesFromPlan.ps1 -PacEnvironmentSelector ${{ parameters.environment }} -DefinitionsRootFolder ${{ parameters.definitionsRootFolder }} -RolesPlanFile $env:PIPELINE_WORKSPACE/roles-plan-${{ parameters.environment }}/roles-plan.json

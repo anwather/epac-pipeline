@@ -1,0 +1,17 @@
+parameters:
+  - name: serviceConnection
+    type: string 
+  - name: environment
+    type: string 
+
+steps:
+  - checkout: self
+  - task: AzureCLI@2
+    name: Remediate
+    displayName: Create Remediation Tasks
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./Scripts/Operations/Create-AzRemediationTasks.ps1 -PacEnvironmentSelector ${{ parameters.environment }}

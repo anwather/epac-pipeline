@@ -1,0 +1,28 @@
+parameters:
+  - name: serviceConnection
+    type: string 
+  - name: environment
+    type: string 
+  - name: definitionsRootFolder
+    type: string
+    default: Definitions
+
+steps:
+  - checkout: self
+  - download: current
+    artifact: "policy-plan-${{ parameters.environment }}"
+  - pwsh: |
+      Install-Module Az.Accounts -Force -AllowClobber -Verbose
+      Install-Module Az.Resources -Force -AllowClobber -Verbose
+  - task: AzurePowerShell@5
+    name: Deploy
+    displayName: Deploy Policies
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      ScriptType: InlineScript
+      azurePowerShellVersion: LatestVersion
+      pwsh: true
+      Inline: |
+        ./Scripts/Deploy/Deploy-AzPoliciesInitiativesAssignmentsFromPlan.ps1 -PacEnvironmentSelector ${{ parameters.environment }} -DefinitionsRootFolder ${{ parameters.definitionsRootFolder }} -OutputFolder $env:PIPELINE_WORKSPACE/policy-plan-${{ parameters.environment }}
+  - publish: "$(Pipeline.Workspace)/policy-plan-${{ parameters.environment }}/roles-plan-${{ parameters.environment }}"
+    artifact: "roles-plan-${{ parameters.environment }}"
